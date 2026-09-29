@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mistlands WoW - Mists of Pandaria 5.4.8</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0d0e13;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: #1a1b23;
+            border: 1px solid #2a2b35;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .title {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f66018, #ffb95f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        .status-box {
+            background: #12131a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot.online { background: #22c55e; box-shadow: 0 0 12px #22c55e; }
+        .dot.offline { background: #ef4444; box-shadow: 0 0 12px #ef4444; }
+        .dot.loading { background: #eab308; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #1f2030;
+            font-size: 13px;
+        }
+        .info-row:last-child { border: none; }
+        .info-label { color: #888; }
+        .info-value { color: #e0e0e0; font-family: monospace; font-size: 12px; word-break: break-all; }
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            margin: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .btn-primary {
+            background: linear-gradient(135deg, #f66018, #ff8a3d);
+            color: white;
+        }
+        .btn-secondary {
+            background: #2a2b35;
+            color: #e0e0e0;
+            border: 1px solid #3a3b45;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .realmlist-box {
+            background: #0a0b10;
+            border: 1px solid #f6601844;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 16px 0;
+            font-family: monospace;
+            font-size: 13px;
+            color: #ffb95f;
+            cursor: pointer;
+            position: relative;
+        }
+        .realmlist-box:hover { border-color: #f66018; }
+        .copy-hint {
+            font-size: 10px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .footer {
+            margin-top: 24px;
+            font-size: 11px;
+            color: #555;
+        }
+        #error-msg {
+            color: #ef4444;
+            font-size: 13px;
+            margin: 12px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="title">MISTLANDS WoW</div>
+        <div class="subtitle">Mists of Pandaria 5.4.8 — Siege of Orgrimmar</div>
+
+        <div class="status-box">
+            <div class="status-indicator">
+                <span class="dot loading" id="statusDot"></span>
+                <span id="statusText">Verificando servidor...</span>
+            </div>
+            <div id="serverInfo" style="display:none">
+                <div class="info-row">
+                    <span class="info-label">Ultima actualizacion</span>
+                    <span class="info-value" id="updatedAt">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="realmlistSection" style="display:none">
+            <div class="realmlist-box" onclick="copyRealmlist()" title="Click para copiar">
+                set realmlist <span id="realmlistValue"></span>
+            </div>
+            <div class="copy-hint" id="copyHint">Click para copiar al portapapeles</div>
+        </div>
+
+        <div id="error-msg"></div>
+
+        <div id="buttons">
+            <a class="btn btn-primary" id="btnPanel" href="#" style="display:none">Abrir Panel Web</a>
+            <a class="btn btn-secondary" id="btnRegister" href="#" style="display:none">Crear Cuenta</a>
+        </div>
+
+        <div class="footer">
+            <p>Descarga el launcher y los archivos del cliente para jugar.</p>
+            <p style="margin-top:8px">© 2024 Mistlands Project</p>
+        </div>
+    </div>
+
+    <script>
+        const GIST_URL = 'https://api.github.com/gists/3e80f69c6329b9c1f1eaa8f59f26ff41';
+
+        async function checkServer() {
+            try {
+                const res = await fetch(GIST_URL, { cache: 'no-store' });
+                const gist = await res.json();
+                const content = gist.files['server_info.json'].content;
+                const data = JSON.parse(content);
+
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                const info = document.getElementById('serverInfo');
+                const realmSection = document.getElementById('realmlistSection');
+                const btnPanel = document.getElementById('btnPanel');
+                const btnRegister = document.getElementById('btnRegister');
+
+                if (data.status === 'online') {
+                    dot.className = 'dot online';
+                    text.textContent = 'SERVIDOR EN LINEA';
+                    text.style.color = '#22c55e';
+                    info.style.display = 'block';
+
+                    document.getElementById('updatedAt').textContent = data.updated_at || '-';
+
+                    if (data.realmlist) {
+                        document.getElementById('realmlistValue').textContent = data.realmlist;
+                        realmSection.style.display = 'block';
+                    }
+
+                    if (data.web) {
+                        btnPanel.href = data.web;
+                        btnPanel.target = '_blank';
+                        btnPanel.style.display = 'inline-block';
+
+                        btnRegister.href = data.register || data.web + '/register';
+                        btnRegister.target = '_blank';
+                        btnRegister.style.display = 'inline-block';
+                    }
+                } else if (data.status === 'reconnecting') {
+                    dot.className = 'dot loading';
+                    text.textContent = 'RECONECTANDO...';
+                    text.style.color = '#eab308';
+                    setTimeout(checkServer, 10000);
+                } else {
+                    dot.className = 'dot offline';
+                    text.textContent = 'SERVIDOR APAGADO';
+                    text.style.color = '#ef4444';
+                }
+            } catch (e) {
+                document.getElementById('statusDot').className = 'dot offline';
+                document.getElementById('statusText').textContent = 'Error de conexion';
+                document.getElementById('error-msg').textContent = 'No se pudo verificar el estado del servidor.';
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        }
+
+        function copyRealmlist() {
+            const val = 'set realmlist ' + document.getElementById('realmlistValue').textContent;
+            navigator.clipboard.writeText(val).then(() => {
+                document.getElementById('copyHint').textContent = '¡Copiado!';
+                setTimeout(() => {
+                    document.getElementById('copyHint').textContent = 'Click para copiar al portapapeles';
+                }, 2000);
+            });
+        }
+
+        checkServer();
+        // Auto-refresh every 2 minutes
+        setInterval(checkServer, 120000);
+    </script>
+</body>
+</html>
