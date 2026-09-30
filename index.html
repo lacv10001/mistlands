@@ -159,10 +159,12 @@
         <div id="buttons">
             <a class="btn btn-primary" id="btnPanel" href="#" style="display:none">Abrir Panel Web</a>
             <a class="btn btn-secondary" id="btnRegister" href="#" style="display:none">Crear Cuenta</a>
+            <a class="btn btn-secondary" id="btnDownload" href="#" style="display:none">Descargar Cliente Ligero (17 MB)</a>
+            <a class="btn btn-secondary" id="btnHowTo" href="#" style="display:none">Como instalar</a>
         </div>
 
         <div class="footer">
-            <p>Descarga el launcher y los archivos del cliente para jugar.</p>
+            <p>Descarga el Cliente Ligero, copia sus archivos dentro de tu carpeta del juego (nunca reemplaces la carpeta Data) y abre el juego con <b>Mistlands WoW.bat</b>.</p>
             <p style="margin-top:8px">© 2024 Mistlands Project</p>
         </div>
     </div>
@@ -205,6 +207,16 @@
                         btnRegister.href = data.register || data.web + '/register';
                         btnRegister.target = '_blank';
                         btnRegister.style.display = 'inline-block';
+
+                        // la direccion de la web cambia con cada tunel: el enlace se arma con la actual
+                        const btnDownload = document.getElementById('btnDownload');
+                        btnDownload.href = data.web + '/downloads/Cliente_Minimo_MoP_5.4.8.zip';
+                        btnDownload.style.display = 'inline-block';
+
+                        const btnHowTo = document.getElementById('btnHowTo');
+                        btnHowTo.href = data.web + '/como-jugar';
+                        btnHowTo.target = '_blank';
+                        btnHowTo.style.display = 'inline-block';
                     }
                 } else if (data.status === 'reconnecting') {
                     dot.className = 'dot loading';
