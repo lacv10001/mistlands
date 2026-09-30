@@ -161,6 +161,7 @@
             <a class="btn btn-secondary" id="btnRegister" href="#" style="display:none">Crear Cuenta</a>
             <a class="btn btn-secondary" id="btnDownload" href="#" style="display:none">Descargar Cliente Ligero (17 MB)</a>
             <a class="btn btn-secondary" id="btnHowTo" href="#" style="display:none">Como instalar</a>
+            <a class="btn btn-secondary" id="btnLang" href="#" style="display:none">Pack Espanol (1,4 GB)</a>
             <a class="btn btn-secondary" id="btnFix" href="#" style="display:none">Error wow-update-esMX</a>
         </div>
 
@@ -223,6 +224,10 @@
                         btnFix.href = data.web + '/como-jugar#errores';
                         btnFix.target = '_blank';
                         btnFix.style.display = 'inline-block';
+
+                        const btnLang = document.getElementById('btnLang');
+                        btnLang.href = data.web + '/downloads/grandes/Pack_Idioma_Espanol_esMX.zip';
+                        btnLang.style.display = 'inline-block';
                     }
                 } else if (data.status === 'reconnecting') {
                     dot.className = 'dot loading';
